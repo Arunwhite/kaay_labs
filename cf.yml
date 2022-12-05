@@ -1,0 +1,74 @@
+#CLOUDFORMATION TEMPLATE FOR EKS CLUSTER - KAAY LABS ENVIRONMENT
+Resources:
+#VPC CREATION
+  ClusterVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+      - Key: Name
+        Value: ClusterVPC
+
+#SUBNET CREATION
+  ClusterSubnet1: 
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref ClusterVPC
+      AvailabilityZone: ap-south-1a
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: Name
+        Value: ClusterSubnet1
+
+  ClusterSubnet2: 
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref ClusterVPC
+      AvailabilityZone: ap-south-1b
+      CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: Name
+        Value: ClusterSubnet2
+
+#ROUTE TABLE CREATION
+  ClusterRT: 
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref ClusterVPC
+      Tags:
+      - Key: Name
+        Value: ClusterRT
+
+#SUBNET ASSOCIATION
+  ClusterSubnetAssociation: 
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref ClusterSubnet1
+      RouteTableId: !Ref ClusterRT
+  
+#INTERNET GATEWAY CREATION
+  ClusterIGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: ClusterIGW
+
+#INTERNET GATEWAY ATTACHMENT TO VPC
+  AttachIGW:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref ClusterVPC
+      InternetGatewayId: !Ref ClusterIGW
+      
+#EDIT ROUTES
+  ClusterRoute:
+    Type: AWS::EC2::Route
+    DependsOn: ClusterIGW
+    Properties: 
+      RouteTableId: !Ref ClusterRT
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref ClusterIGW
+
